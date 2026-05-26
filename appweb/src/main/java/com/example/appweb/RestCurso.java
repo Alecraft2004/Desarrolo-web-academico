@@ -1,55 +1,40 @@
-package com.example.appweb;
+﻿package com.example.appweb;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/cursos")
 public class RestCurso {
 
-	static HashMap<Integer, Curso> mapCursos = new HashMap<>();
+	@Autowired
+	private CursoRepository repo;
 
-	// Operación 5: Listar todos los cursos
 	@GetMapping
 	public List<Curso> listar() {
-		return new ArrayList<>(mapCursos.values());
+		return repo.findAll();
 	}
 
-	// Operación 6: Consultar un curso por ID
 	@GetMapping("/{id}")
 	public ResponseEntity<Curso> consultar(@PathVariable int id) {
-		Curso c = mapCursos.get(id);
-		if (c == null) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-		}
-		return ResponseEntity.ok(c);
+		return repo.findById(id)
+				.map(ResponseEntity::ok)
+				.orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
 	}
 
-	// Operación 7: Registrar un nuevo curso
 	@PostMapping
 	public ResponseEntity<Curso> registrar(@RequestBody Curso nuevo) {
-		mapCursos.put(nuevo.getId(), nuevo);
-		return ResponseEntity.ok(nuevo);
+		return ResponseEntity.ok(repo.save(nuevo));
 	}
 
-	// Operación 8: Eliminar un curso por ID
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Curso> eliminar(@PathVariable int id) {
-		Curso c = mapCursos.remove(id);
-		if (c == null) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-		}
-		return ResponseEntity.ok(c);
+		return repo.findById(id).map(c -> {
+			repo.deleteById(id);
+			return ResponseEntity.ok(c);
+		}).orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
 	}
 }

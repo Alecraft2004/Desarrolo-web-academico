@@ -1,15 +1,20 @@
-package com.example.appweb;
+﻿package com.example.appweb;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "profesores")
 public class Profesor {
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
 	private String nombre;
 	private String email;
 	private String departamento;
 	private String especialidad;
 
-	public Profesor() {
-	}
+	public Profesor() {}
 
 	public Profesor(int id, String nombre, String email, String departamento, String especialidad) {
 		this.id = id;
