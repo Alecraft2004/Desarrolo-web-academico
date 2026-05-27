@@ -4,86 +4,137 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Plataforma Educativa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --indigo:#6366f1; --violet:#8b5cf6; --pink:#ec4899;
+      --grad: linear-gradient(135deg,#6366f1 0%,#8b5cf6 55%,#ec4899 100%);
+      --ink:#1e293b; --muted:#64748b; --line:#e8edf5; --bg:#eef1f8;
+      --danger:#ef4444; --danger2:#dc2626; --green:#10b981; --green2:#059669;
+      --radius:18px; --shadow:0 12px 34px -16px rgba(15,23,42,.30);
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body { font-family: Arial, sans-serif; background: #f0f2f5; color: #333; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, Arial, sans-serif;
+      background: var(--bg); color: var(--ink); min-height: 100vh;
+      position: relative; overflow-x: hidden;
+    }
+    /* blobs decorativos */
+    body::before, body::after {
+      content: ""; position: fixed; border-radius: 50%; filter: blur(80px);
+      opacity: .22; z-index: 0; pointer-events: none;
+    }
+    body::before { width: 420px; height: 420px; background: var(--violet); top: -120px; right: -80px; animation: float1 14s ease-in-out infinite; }
+    body::after  { width: 380px; height: 380px; background: var(--indigo); bottom: -140px; left: -100px; animation: float2 16s ease-in-out infinite; }
+    @keyframes float1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,40px)} }
+    @keyframes float2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(40px,-30px)} }
 
-    header { background: #1a73e8; color: white; padding: 16px 32px; }
-    header h1 { font-size: 22px; }
-    header p  { font-size: 13px; opacity: 0.85; margin-top: 2px; }
+    header {
+      background: var(--grad); color: #fff; padding: 20px 36px;
+      display: flex; justify-content: space-between; align-items: center;
+      position: relative; z-index: 2; box-shadow: 0 8px 24px -10px rgba(99,102,241,.55);
+      animation: slideDown .6s cubic-bezier(.16,1,.3,1) both;
+    }
+    @keyframes slideDown { from{opacity:0; transform:translateY(-100%)} to{opacity:1; transform:none} }
+    header h1 { font-family:'Poppins',sans-serif; font-size: 24px; letter-spacing:.3px; }
+    header p  { font-size: 13px; opacity: 0.9; margin-top: 3px; }
+    header .user-box { text-align: right; font-size: 13px; }
+    header .user-box .uname { font-weight: 700; }
+    header .user-box button {
+      margin-top: 8px; background: rgba(255,255,255,0.18); color: #fff;
+      border: 1px solid rgba(255,255,255,0.45); border-radius: 9px;
+      padding: 7px 16px; font-size: 12px; font-weight:600; cursor: pointer;
+      transition: background .2s, transform .15s, box-shadow .2s;
+    }
+    header .user-box button:hover { background: rgba(255,255,255,0.32); transform: translateY(-2px); box-shadow:0 6px 16px -6px rgba(0,0,0,.35); }
+    header .user-box button:active { transform: translateY(0); }
 
     nav {
-      background: #fff;
-      border-bottom: 2px solid #e0e0e0;
-      display: flex;
-      padding: 0 32px;
+      background: rgba(255,255,255,0.85); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line); display: flex; padding: 0 28px;
+      position: sticky; top: 0; z-index: 5; box-shadow: 0 4px 18px -14px rgba(15,23,42,.4);
     }
-
     nav button {
-      background: none; border: none; padding: 14px 20px;
-      cursor: pointer; font-size: 14px; color: #555;
-      border-bottom: 3px solid transparent; margin-bottom: -2px;
+      background: none; border: none; padding: 16px 22px; cursor: pointer;
+      font-size: 14px; font-weight: 600; color: var(--muted);
+      position: relative; transition: color .25s;
     }
-    nav button.active { color: #1a73e8; border-bottom-color: #1a73e8; font-weight: bold; }
-    nav button:hover  { color: #1a73e8; }
+    nav button::after {
+      content:""; position:absolute; left:50%; bottom:8px; height:3px; width:0;
+      background: var(--grad); border-radius:3px; transform:translateX(-50%);
+      transition: width .3s cubic-bezier(.16,1,.3,1);
+    }
+    nav button.active { color: var(--indigo); }
+    nav button.active::after { width: calc(100% - 28px); }
+    nav button:hover { color: var(--violet); }
 
-    main { padding: 28px 32px; max-width: 960px; margin: 0 auto; }
+    main { padding: 32px; max-width: 1040px; margin: 0 auto; position: relative; z-index: 1; }
 
     .section { display: none; }
-    .section.active { display: block; }
+    .section.active { display: block; animation: sectionIn .5s cubic-bezier(.16,1,.3,1) both; }
+    @keyframes sectionIn { from{opacity:0; transform:translateY(18px)} to{opacity:1; transform:none} }
 
-    h2 { font-size: 18px; margin-bottom: 16px; color: #1a73e8; }
+    h2 { font-family:'Poppins',sans-serif; font-size: 22px; margin-bottom: 18px; color: var(--ink); }
 
     .card {
-      background: white; border-radius: 8px;
-      padding: 20px; margin-bottom: 20px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      background: #fff; border-radius: var(--radius); padding: 24px;
+      margin-bottom: 22px; box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,.6);
+      transition: transform .28s cubic-bezier(.16,1,.3,1), box-shadow .28s;
     }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 22px 50px -22px rgba(15,23,42,.40); }
 
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .card h3 { font-size: 14px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .card h3 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight:700; }
 
     .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 10px; margin-bottom: 12px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+      gap: 12px; margin-bottom: 16px;
     }
-
     .form-grid input {
-      padding: 8px 10px; border: 1px solid #ccc;
-      border-radius: 5px; font-size: 14px; width: 100%;
+      padding: 11px 13px; border: 1.5px solid var(--line);
+      border-radius: 11px; font-size: 14px; width: 100%; font-family: inherit;
+      background:#fbfcfe; transition: border-color .2s, box-shadow .2s, background .2s;
     }
-    .form-grid input:focus { outline: none; border-color: #1a73e8; }
+    .form-grid input:focus { outline: none; border-color: var(--indigo); background:#fff; box-shadow: 0 0 0 4px rgba(99,102,241,.15); }
 
-    button.btn { padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-size: 13px; }
-    button.btn-primary  { background: #1a73e8; color: white; }
-    button.btn-primary:hover  { background: #1558b0; }
-    button.btn-danger   { background: #e53935; color: white; }
-    button.btn-danger:hover   { background: #b71c1c; }
-    button.btn-success  { background: #2e7d32; color: white; }
-    button.btn-success:hover  { background: #1b5e20; }
-    button.btn-sm { font-size: 12px; padding: 5px 10px; }
+    button.btn {
+      padding: 10px 20px; border: none; border-radius: 11px; cursor: pointer;
+      font-size: 13px; font-weight: 600; color:#fff; font-family:inherit;
+      transition: transform .15s, box-shadow .25s, filter .2s;
+    }
+    button.btn-primary { background: var(--grad); box-shadow:0 8px 20px -8px rgba(99,102,241,.6); }
+    button.btn-danger  { background: linear-gradient(135deg,#f87171,#dc2626); box-shadow:0 8px 20px -8px rgba(239,68,68,.55); }
+    button.btn-success { background: linear-gradient(135deg,#34d399,#059669); box-shadow:0 8px 20px -8px rgba(16,185,129,.55); }
+    button.btn:hover { transform: translateY(-2px); filter: brightness(1.06); }
+    button.btn:active { transform: translateY(0) scale(.98); }
+    button.btn-sm { font-size: 12px; padding: 7px 13px; }
 
-    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-group { display: flex; gap: 9px; flex-wrap: wrap; }
 
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th { text-align: left; padding: 10px 12px; background: #f5f5f5; border-bottom: 2px solid #e0e0e0; color: #555; }
-    td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+    th { text-align: left; padding: 12px 14px; background: #f7f9fc; border-bottom: 2px solid var(--line); color: var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.5px; }
+    th:first-child { border-top-left-radius:10px; } th:last-child { border-top-right-radius:10px; }
+    td { padding: 12px 14px; border-bottom: 1px solid #f1f4f9; }
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: #fafafa; }
+    tbody tr { transition: background .18s; animation: rowIn .45s ease both; }
+    tbody tr:hover td { background: #f8faff; }
+    @keyframes rowIn { from{opacity:0; transform:translateX(-12px)} to{opacity:1; transform:none} }
+    tbody tr:nth-child(1){animation-delay:.03s} tbody tr:nth-child(2){animation-delay:.07s}
+    tbody tr:nth-child(3){animation-delay:.11s} tbody tr:nth-child(4){animation-delay:.15s}
+    tbody tr:nth-child(5){animation-delay:.19s} tbody tr:nth-child(6){animation-delay:.23s}
+    tbody tr:nth-child(7){animation-delay:.27s} tbody tr:nth-child(8){animation-delay:.31s}
+    tbody tr:nth-child(n+9){animation-delay:.35s}
 
-    .empty { color: #999; text-align: center; padding: 20px; font-size: 14px; }
+    .empty { color: #aab4c5; text-align: center; padding: 24px; font-size: 14px; }
 
-    .msg { padding: 10px 14px; border-radius: 5px; margin-bottom: 12px; font-size: 13px; display: none; }
-    .msg.ok    { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
-    .msg.error { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+    .msg { padding: 12px 16px; border-radius: 11px; margin-bottom: 14px; font-size: 13px; font-weight:500; display: none; }
+    .msg.ok    { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; animation: toastIn .4s cubic-bezier(.16,1,.3,1); }
+    .msg.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; animation: shake .4s; }
+    @keyframes toastIn { from{opacity:0; transform:translateY(-10px)} to{opacity:1; transform:none} }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
 
     input[type="file"] { display: none; }
   </style>
@@ -91,8 +142,14 @@
 <body>
 
 <header>
-  <h1>Plataforma Educativa</h1>
-  <p>Gestion de Estudiantes, Cursos, Profesores e Inscripciones</p>
+  <div>
+    <h1>Plataforma Educativa</h1>
+    <p>Gestion de Estudiantes, Cursos, Profesores e Inscripciones</p>
+  </div>
+  <div class="user-box">
+    <div>Sesion: <span class="uname" id="hdr-user">-</span> (<span id="hdr-rol">-</span>)</div>
+    <button onclick="cerrarSesion()">Cerrar sesion</button>
+  </div>
 </header>
 
 <nav>
@@ -108,7 +165,7 @@
   <div id="tab-estudiantes" class="section active">
     <h2>Estudiantes</h2>
     <div class="card">
-      <h3 style="margin-bottom:12px">Registrar Estudiante</h3>
+      <h3 style="margin-bottom:14px">Registrar Estudiante</h3>
       <div id="msg-est" class="msg"></div>
       <div class="form-grid">
         <input id="est-id"       type="number" placeholder="ID" />
@@ -139,7 +196,7 @@
   <div id="tab-cursos" class="section">
     <h2>Cursos</h2>
     <div class="card">
-      <h3 style="margin-bottom:12px">Registrar Curso</h3>
+      <h3 style="margin-bottom:14px">Registrar Curso</h3>
       <div id="msg-cur" class="msg"></div>
       <div class="form-grid">
         <input id="cur-id"          type="number" placeholder="ID" />
@@ -170,7 +227,7 @@
   <div id="tab-profesores" class="section">
     <h2>Profesores</h2>
     <div class="card">
-      <h3 style="margin-bottom:12px">Registrar Profesor</h3>
+      <h3 style="margin-bottom:14px">Registrar Profesor</h3>
       <div id="msg-prof" class="msg"></div>
       <div class="form-grid">
         <input id="prof-id"           type="number" placeholder="ID" />
@@ -201,7 +258,7 @@
   <div id="tab-inscripciones" class="section">
     <h2>Inscripciones</h2>
     <div class="card">
-      <h3 style="margin-bottom:12px">Registrar Inscripcion</h3>
+      <h3 style="margin-bottom:14px">Registrar Inscripcion</h3>
       <div id="msg-ins" class="msg"></div>
       <div class="form-grid">
         <input id="ins-id"           type="number" placeholder="ID" />
@@ -233,6 +290,38 @@
 <script>
   const API = '';
 
+  // ── SESION / SEGURIDAD ─────────────────────────────────────────────────────
+  // Si no hay token, volver al login.
+  const TOKEN = localStorage.getItem('token');
+  if (!TOKEN) {
+    window.location.href = 'login.html';
+  }
+
+  // Mostrar usuario en el encabezado
+  document.getElementById('hdr-user').textContent = localStorage.getItem('username') || '-';
+  document.getElementById('hdr-rol').textContent  = localStorage.getItem('rol') || '-';
+
+  function cerrarSesion() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    localStorage.removeItem('rol');
+    window.location.href = 'login.html';
+  }
+
+  // fetch que agrega el token JWT y maneja sesion expirada
+  async function authFetch(url, options = {}) {
+    options.headers = Object.assign({}, options.headers, {
+      'Authorization': 'Bearer ' + localStorage.getItem('token')
+    });
+    const r = await fetch(API + url, options);
+    if (r.status === 401 || r.status === 403) {
+      alert('Tu sesion expiro o no tienes permiso. Inicia sesion de nuevo.');
+      cerrarSesion();
+      throw new Error('No autorizado');
+    }
+    return r;
+  }
+
   const ENDPOINTS = {
     est:  '/estudiantes',
     cur:  '/cursos',
@@ -260,7 +349,7 @@
   function limpiar(...ids) { ids.forEach(id => document.getElementById(id).value = ''); }
 
   async function post(url, data) {
-    return fetch(API + url, {
+    return authFetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -268,7 +357,7 @@
   }
 
   async function del(url) {
-    return fetch(API + url, { method: 'DELETE' });
+    return authFetch(url, { method: 'DELETE' });
   }
 
   // ── IMPORTAR JSON ──────────────────────────────────────────────────────────
@@ -304,7 +393,7 @@
   // ── BORRAR TODO ────────────────────────────────────────────────────────────
   async function borrarTodo(endpoint, recargar) {
     if (!confirm(`¿Seguro que deseas eliminar TODOS los registros de ${endpoint}?`)) return;
-    const r = await fetch(API + '/' + endpoint);
+    const r = await authFetch('/' + endpoint);
     const lista = await r.json();
     for (const item of lista) {
       await del('/' + endpoint + '/' + item.id);
@@ -336,7 +425,7 @@
   }
 
   async function cargarEstudiantes() {
-    const data = await fetch(API + '/estudiantes').then(r => r.json());
+    const data = await authFetch('/estudiantes').then(r => r.json());
     const tbody = document.getElementById('tabla-estudiantes');
     if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Sin estudiantes registrados</td></tr>'; return; }
     tbody.innerHTML = data.map(e => `
@@ -371,7 +460,7 @@
   }
 
   async function cargarCursos() {
-    const data = await fetch(API + '/cursos').then(r => r.json());
+    const data = await authFetch('/cursos').then(r => r.json());
     const tbody = document.getElementById('tabla-cursos');
     if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Sin cursos registrados</td></tr>'; return; }
     tbody.innerHTML = data.map(c => `
@@ -406,7 +495,7 @@
   }
 
   async function cargarProfesores() {
-    const data = await fetch(API + '/profesores').then(r => r.json());
+    const data = await authFetch('/profesores').then(r => r.json());
     const tbody = document.getElementById('tabla-profesores');
     if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Sin profesores registrados</td></tr>'; return; }
     tbody.innerHTML = data.map(p => `
@@ -443,7 +532,7 @@
   }
 
   async function cargarInscripciones() {
-    const data = await fetch(API + '/inscripciones').then(r => r.json());
+    const data = await authFetch('/inscripciones').then(r => r.json());
     const tbody = document.getElementById('tabla-inscripciones');
     if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Sin inscripciones registradas</td></tr>'; return; }
     tbody.innerHTML = data.map(i => `
