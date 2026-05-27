@@ -1,4 +1,4 @@
-﻿package com.example.appweb;
+package com.example.appweb;
 
 import jakarta.persistence.*;
 

@@ -1,4 +1,4 @@
-﻿package com.example.appweb;
+package com.example.appweb;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

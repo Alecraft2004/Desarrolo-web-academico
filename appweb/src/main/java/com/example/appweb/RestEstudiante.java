@@ -1,4 +1,4 @@
-﻿package com.example.appweb;
+package com.example.appweb;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +28,17 @@ public class RestEstudiante {
 	@PostMapping
 	public ResponseEntity<Estudiante> registrar(@RequestBody Estudiante nuevo) {
 		return ResponseEntity.ok(repo.save(nuevo));
+	}
+
+	@PutMapping("/{id}")
+	public ResponseEntity<Estudiante> actualizar(@PathVariable int id, @RequestBody Estudiante datos) {
+		return repo.findById(id).map(e -> {
+			e.setNombre(datos.getNombre());
+			e.setEmail(datos.getEmail());
+			e.setCarrera(datos.getCarrera());
+			e.setSemestre(datos.getSemestre());
+			return ResponseEntity.ok(repo.save(e));
+		}).orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
 	}
 
 	@DeleteMapping("/{id}")
