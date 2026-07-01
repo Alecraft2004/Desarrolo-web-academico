@@ -1,0 +1,50 @@
+<h2>Profesores</h2>
+
+<div class="card">
+  <h3>{{ editandoId ? 'Editar' : 'Registrar' }} Profesor</h3>
+  @if (mensaje) {
+    <div class="msg" [class.error]="esError" [class.ok]="!esError">{{ mensaje }}</div>
+  }
+  <form (ngSubmit)="guardar()" #f="ngForm">
+    <div class="form-grid">
+      <input [(ngModel)]="form.nombre" name="nombre" placeholder="Nombre" required />
+      <input [(ngModel)]="form.email" name="email" type="email" placeholder="Email" />
+      <input [(ngModel)]="form.departamento" name="departamento" placeholder="Departamento" />
+      <input [(ngModel)]="form.especialidad" name="especialidad" placeholder="Especialidad" />
+    </div>
+    <div class="btn-group">
+      <button type="submit" class="btn btn-primary">{{ editandoId ? 'Actualizar' : 'Registrar' }}</button>
+      @if (editandoId) {
+        <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
+      }
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Lista de Profesores</h3>
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Nombre</th><th>Email</th><th>Departamento</th><th>Especialidad</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+      @for (p of profesores; track p.id) {
+        <tr>
+          <td>{{ p.id }}</td>
+          <td>{{ p.nombre }}</td>
+          <td>{{ p.email }}</td>
+          <td>{{ p.departamento }}</td>
+          <td>{{ p.especialidad }}</td>
+          <td>
+            <div class="btn-group">
+              <button class="btn btn-success btn-sm" (click)="editar(p)">Editar</button>
+              <button class="btn btn-danger btn-sm" (click)="eliminar(p.id!)">Eliminar</button>
+            </div>
+          </td>
+        </tr>
+      } @empty {
+        <tr><td colspan="6" class="empty">Sin profesores registrados</td></tr>
+      }
+    </tbody>
+  </table>
+</div>

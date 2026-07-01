@@ -1,0 +1,25 @@
+<div class="auth-page register-page">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="auth-box">
+    <div class="logo register-logo">✨</div>
+    <h1>Crear Cuenta</h1>
+    <p class="sub">Unete a la Plataforma Educativa</p>
+    <form (ngSubmit)="register()" #f="ngForm">
+      <label>Usuario</label>
+      <input type="text" [(ngModel)]="username" name="username" placeholder="Elige un usuario" required />
+      <label>Contrasena</label>
+      <input type="password" [(ngModel)]="password" name="password" placeholder="Elige una contrasena" required />
+      <label>Rol</label>
+      <select [(ngModel)]="rol" name="rol">
+        <option value="USER">Usuario (USER)</option>
+        <option value="ADMIN">Administrador (ADMIN)</option>
+      </select>
+      <button type="submit" class="btn-green">Registrarme</button>
+    </form>
+    @if (mensaje) {
+      <div class="msg" [class.error]="esError" [class.ok]="!esError">{{ mensaje }}</div>
+    }
+    <div class="link">Ya tienes cuenta? <a routerLink="/login">Inicia sesion</a></div>
+  </div>
+</div>

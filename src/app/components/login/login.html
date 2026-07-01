@@ -1,0 +1,20 @@
+<div class="auth-page">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="auth-box">
+    <div class="logo">🎓</div>
+    <h1>Bienvenido</h1>
+    <p class="sub">Inicia sesion en la Plataforma Educativa</p>
+    <form (ngSubmit)="login()" #f="ngForm">
+      <label>Usuario</label>
+      <input type="text" [(ngModel)]="username" name="username" placeholder="Tu usuario" required />
+      <label>Contrasena</label>
+      <input type="password" [(ngModel)]="password" name="password" placeholder="Tu contrasena" required />
+      <button type="submit">Entrar</button>
+    </form>
+    @if (mensaje) {
+      <div class="msg" [class.error]="esError" [class.ok]="!esError">{{ mensaje }}</div>
+    }
+    <div class="link">No tienes cuenta? <a routerLink="/register">Registrate aqui</a></div>
+  </div>
+</div>

@@ -1,0 +1,21 @@
+<header>
+  <div>
+    <h1>Plataforma Educativa</h1>
+    <p>Gestion de Estudiantes, Cursos, Profesores e Inscripciones</p>
+  </div>
+  <div class="user-box">
+    <div>Sesion: <span class="uname">{{ auth.getUsername() }}</span> ({{ auth.getRol() }})</div>
+    <button (click)="logout()">Cerrar sesion</button>
+  </div>
+</header>
+
+<nav>
+  <a routerLink="estudiantes" routerLinkActive="active">Estudiantes</a>
+  <a routerLink="cursos" routerLinkActive="active">Cursos</a>
+  <a routerLink="profesores" routerLinkActive="active">Profesores</a>
+  <a routerLink="inscripciones" routerLinkActive="active">Inscripciones</a>
+</nav>
+
+<main>
+  <router-outlet />
+</main>

@@ -1,0 +1,50 @@
+<h2>Cursos</h2>
+
+<div class="card">
+  <h3>{{ editandoId ? 'Editar' : 'Registrar' }} Curso</h3>
+  @if (mensaje) {
+    <div class="msg" [class.error]="esError" [class.ok]="!esError">{{ mensaje }}</div>
+  }
+  <form (ngSubmit)="guardar()" #f="ngForm">
+    <div class="form-grid">
+      <input [(ngModel)]="form.nombre" name="nombre" placeholder="Nombre" required />
+      <input [(ngModel)]="form.descripcion" name="descripcion" placeholder="Descripcion" />
+      <input [(ngModel)]="form.creditos" name="creditos" type="number" placeholder="Creditos" />
+      <input [(ngModel)]="form.cupo" name="cupo" type="number" placeholder="Cupo" />
+    </div>
+    <div class="btn-group">
+      <button type="submit" class="btn btn-primary">{{ editandoId ? 'Actualizar' : 'Registrar' }}</button>
+      @if (editandoId) {
+        <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
+      }
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Lista de Cursos</h3>
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Nombre</th><th>Descripcion</th><th>Creditos</th><th>Cupo</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+      @for (c of cursos; track c.id) {
+        <tr>
+          <td>{{ c.id }}</td>
+          <td>{{ c.nombre }}</td>
+          <td>{{ c.descripcion }}</td>
+          <td>{{ c.creditos }}</td>
+          <td>{{ c.cupo }}</td>
+          <td>
+            <div class="btn-group">
+              <button class="btn btn-success btn-sm" (click)="editar(c)">Editar</button>
+              <button class="btn btn-danger btn-sm" (click)="eliminar(c.id!)">Eliminar</button>
+            </div>
+          </td>
+        </tr>
+      } @empty {
+        <tr><td colspan="6" class="empty">Sin cursos registrados</td></tr>
+      }
+    </tbody>
+  </table>
+</div>
