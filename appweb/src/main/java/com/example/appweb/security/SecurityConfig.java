@@ -25,14 +25,12 @@ public class SecurityConfig {
 		http
 				.csrf(AbstractHttpConfigurer::disable)
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers("/auth/**", "/", "/index.html", "/*.html",
-								"/css/**", "/js/**", "/error").permitAll()
-						// Lectura permitida para USER y ADMIN
+						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+						.requestMatchers("/auth/**", "/error").permitAll()
 						.requestMatchers(HttpMethod.GET,
 								"/cursos/**", "/estudiantes/**",
 								"/profesores/**", "/inscripciones/**")
 								.hasAnyRole("USER", "ADMIN")
-						// Escritura solo para ADMIN
 						.requestMatchers(HttpMethod.POST,
 								"/cursos/**", "/estudiantes/**",
 								"/profesores/**", "/inscripciones/**")

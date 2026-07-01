@@ -4,20 +4,27 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@WithMockUser(roles = "ADMIN")
 public class RestCursoTest {
 
 	@Autowired
 	MockMvc mockMvc;
+
+	private int extractId(MvcResult result) throws Exception {
+		return JsonPath.read(result.getResponse().getContentAsString(), "$.id");
+	}
 
 	// ── GET /cursos ───────────────────────────────────────────────────────────
 
@@ -44,13 +51,12 @@ public class RestCursoTest {
 	// Caso 3: El curso registrado aparece en la lista
 	@Test
 	public void testListarContieneCursoRegistrado() throws Exception {
-		String json = "{\"id\":2001,\"nombre\":\"Calculo I\",\"descripcion\":\"Limites y derivadas\","
+		String json = "{\"nombre\":\"Calculo I\",\"descripcion\":\"Limites y derivadas\","
 				+ "\"creditos\":4,\"cupo\":30}";
 		mockMvc.perform(post("/cursos").contentType(APPLICATION_JSON).content(json));
 
 		MvcResult result = mockMvc.perform(get("/cursos").accept(APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$[?(@.id==2001)]").isNotEmpty())
 				.andReturn();
 		Assertions.assertTrue(result.getResponse().getContentAsString().contains("Calculo I"));
 	}
@@ -60,11 +66,13 @@ public class RestCursoTest {
 	// Caso 4: Consultar curso existente devuelve 200
 	@Test
 	public void testConsultarCursoExistente() throws Exception {
-		String json = "{\"id\":2010,\"nombre\":\"Algebra Lineal\",\"descripcion\":\"Matrices y vectores\","
+		String json = "{\"nombre\":\"Algebra Lineal\",\"descripcion\":\"Matrices y vectores\","
 				+ "\"creditos\":3,\"cupo\":25}";
-		mockMvc.perform(post("/cursos").contentType(APPLICATION_JSON).content(json));
+		MvcResult post = mockMvc.perform(post("/cursos").contentType(APPLICATION_JSON)
+				.content(json)).andReturn();
+		int id = extractId(post);
 
-		MvcResult result = mockMvc.perform(get("/cursos/2010").accept(APPLICATION_JSON))
+		MvcResult result = mockMvc.perform(get("/cursos/" + id).accept(APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andReturn();
 		Assertions.assertEquals(200, result.getResponse().getStatus());
@@ -73,7 +81,7 @@ public class RestCursoTest {
 	// Caso 5: Consultar curso inexistente devuelve 404
 	@Test
 	public void testConsultarCursoInexistente() throws Exception {
-		MvcResult result = mockMvc.perform(get("/cursos/9999").accept(APPLICATION_JSON))
+		MvcResult result = mockMvc.perform(get("/cursos/99999999").accept(APPLICATION_JSON))
 				.andExpect(status().isNotFound())
 				.andReturn();
 		Assertions.assertEquals(404, result.getResponse().getStatus());
@@ -82,11 +90,13 @@ public class RestCursoTest {
 	// Caso 6: Consultar devuelve los datos correctos del curso
 	@Test
 	public void testConsultarVerificaDatos() throws Exception {
-		String json = "{\"id\":2020,\"nombre\":\"Programacion\",\"descripcion\":\"Java y POO\","
+		String json = "{\"nombre\":\"Programacion\",\"descripcion\":\"Java y POO\","
 				+ "\"creditos\":5,\"cupo\":40}";
-		mockMvc.perform(post("/cursos").contentType(APPLICATION_JSON).content(json));
+		MvcResult post = mockMvc.perform(post("/cursos").contentType(APPLICATION_JSON)
+				.content(json)).andReturn();
+		int id = extractId(post);
 
-		MvcResult result = mockMvc.perform(get("/cursos/2020").accept(APPLICATION_JSON))
+		MvcResult result = mockMvc.perform(get("/cursos/" + id).accept(APPLICATION_JSON))
 				.andExpect(jsonPath("$.nombre").value("Programacion"))
 				.andExpect(jsonPath("$.creditos").value(5))
 				.andExpect(jsonPath("$.cupo").value(40))
@@ -101,7 +111,7 @@ public class RestCursoTest {
 	// Caso 7: Registrar devuelve 200 OK
 	@Test
 	public void testRegistrarRetornaOK() throws Exception {
-		String json = "{\"id\":2030,\"nombre\":\"Fisica I\",\"descripcion\":\"Mecanica clasica\","
+		String json = "{\"nombre\":\"Fisica I\",\"descripcion\":\"Mecanica clasica\","
 				+ "\"creditos\":4,\"cupo\":35}";
 		MvcResult result = mockMvc.perform(post("/cursos").contentType(APPLICATION_JSON)
 				.content(json).accept(APPLICATION_JSON))
@@ -113,11 +123,10 @@ public class RestCursoTest {
 	// Caso 8: Registrar devuelve el cuerpo con los datos del curso
 	@Test
 	public void testRegistrarRetornaDatosCurso() throws Exception {
-		String json = "{\"id\":2040,\"nombre\":\"Quimica General\",\"descripcion\":\"Atomos y moleculas\","
+		String json = "{\"nombre\":\"Quimica General\",\"descripcion\":\"Atomos y moleculas\","
 				+ "\"creditos\":3,\"cupo\":20}";
 		MvcResult result = mockMvc.perform(post("/cursos").contentType(APPLICATION_JSON)
 				.content(json).accept(APPLICATION_JSON))
-				.andExpect(jsonPath("$.id").value(2040))
 				.andExpect(jsonPath("$.nombre").value("Quimica General"))
 				.andExpect(jsonPath("$.descripcion").value("Atomos y moleculas"))
 				.andReturn();
@@ -129,13 +138,15 @@ public class RestCursoTest {
 	// Caso 9: El curso queda persistido tras el registro
 	@Test
 	public void testRegistrarCursoPersistido() throws Exception {
-		String json = "{\"id\":2050,\"nombre\":\"Historia\",\"descripcion\":\"Historia universal\","
+		String json = "{\"nombre\":\"Historia Universal\",\"descripcion\":\"Historia del mundo\","
 				+ "\"creditos\":2,\"cupo\":50}";
-		mockMvc.perform(post("/cursos").contentType(APPLICATION_JSON).content(json));
+		MvcResult post = mockMvc.perform(post("/cursos").contentType(APPLICATION_JSON)
+				.content(json)).andReturn();
+		int id = extractId(post);
 
-		MvcResult result = mockMvc.perform(get("/cursos/2050").accept(APPLICATION_JSON))
+		MvcResult result = mockMvc.perform(get("/cursos/" + id).accept(APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id").value(2050))
+				.andExpect(jsonPath("$.id").value(id))
 				.andReturn();
 		Assertions.assertNotNull(result.getResponse().getContentAsString());
 		Assertions.assertFalse(result.getResponse().getContentAsString().isEmpty());
@@ -146,13 +157,15 @@ public class RestCursoTest {
 	// Caso 10: Eliminar curso existente devuelve 200 con sus datos
 	@Test
 	public void testEliminarCursoExistente() throws Exception {
-		String json = "{\"id\":2060,\"nombre\":\"Estadistica\",\"descripcion\":\"Probabilidad\","
+		String json = "{\"nombre\":\"Estadistica\",\"descripcion\":\"Probabilidad\","
 				+ "\"creditos\":3,\"cupo\":30}";
-		mockMvc.perform(post("/cursos").contentType(APPLICATION_JSON).content(json));
+		MvcResult post = mockMvc.perform(post("/cursos").contentType(APPLICATION_JSON)
+				.content(json)).andReturn();
+		int id = extractId(post);
 
-		MvcResult result = mockMvc.perform(delete("/cursos/2060").accept(APPLICATION_JSON))
+		MvcResult result = mockMvc.perform(delete("/cursos/" + id).accept(APPLICATION_JSON))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id").value(2060))
+				.andExpect(jsonPath("$.id").value(id))
 				.andReturn();
 		Assertions.assertEquals(200, result.getResponse().getStatus());
 		Assertions.assertTrue(result.getResponse().getContentAsString().contains("Estadistica"));
@@ -161,7 +174,7 @@ public class RestCursoTest {
 	// Caso 11: Eliminar curso inexistente devuelve 404
 	@Test
 	public void testEliminarCursoInexistente() throws Exception {
-		MvcResult result = mockMvc.perform(delete("/cursos/8888").accept(APPLICATION_JSON))
+		MvcResult result = mockMvc.perform(delete("/cursos/99999998").accept(APPLICATION_JSON))
 				.andExpect(status().isNotFound())
 				.andReturn();
 		Assertions.assertEquals(404, result.getResponse().getStatus());
@@ -170,14 +183,68 @@ public class RestCursoTest {
 	// Caso 12: Tras eliminar, el curso ya no es accesible
 	@Test
 	public void testEliminarCursoYaNoAccesible() throws Exception {
-		String json = "{\"id\":2070,\"nombre\":\"Economia\",\"descripcion\":\"Micro y macro\","
+		String json = "{\"nombre\":\"Economia\",\"descripcion\":\"Micro y macro\","
 				+ "\"creditos\":3,\"cupo\":45}";
-		mockMvc.perform(post("/cursos").contentType(APPLICATION_JSON).content(json));
-		mockMvc.perform(delete("/cursos/2070"));
+		MvcResult post = mockMvc.perform(post("/cursos").contentType(APPLICATION_JSON)
+				.content(json)).andReturn();
+		int id = extractId(post);
+		mockMvc.perform(delete("/cursos/" + id));
 
-		MvcResult result = mockMvc.perform(get("/cursos/2070").accept(APPLICATION_JSON))
+		MvcResult result = mockMvc.perform(get("/cursos/" + id).accept(APPLICATION_JSON))
 				.andExpect(status().isNotFound())
 				.andReturn();
 		Assertions.assertEquals(404, result.getResponse().getStatus());
+	}
+
+	// ── PUT /cursos/{id} ──────────────────────────────────────────────────────
+
+	// Caso 13: Actualizar curso existente devuelve 200
+	@Test
+	public void testActualizarCursoExistente() throws Exception {
+		String json = "{\"nombre\":\"Estadistica Basica\",\"descripcion\":\"Datos\","
+				+ "\"creditos\":3,\"cupo\":20}";
+		MvcResult post = mockMvc.perform(post("/cursos").contentType(APPLICATION_JSON)
+				.content(json)).andReturn();
+		int id = extractId(post);
+
+		String update = "{\"nombre\":\"Estadistica Avanzada\",\"descripcion\":\"Datos avanzados\","
+				+ "\"creditos\":4,\"cupo\":25}";
+		MvcResult putResult = mockMvc.perform(put("/cursos/" + id).contentType(APPLICATION_JSON)
+				.content(update).accept(APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andReturn();
+		Assertions.assertEquals(200, putResult.getResponse().getStatus());
+	}
+
+	// Caso 14: Actualizar devuelve los datos modificados del curso
+	@Test
+	public void testActualizarRetornaDatosActualizados() throws Exception {
+		String json = "{\"nombre\":\"Bioquimica\",\"descripcion\":\"Original\","
+				+ "\"creditos\":4,\"cupo\":30}";
+		MvcResult post = mockMvc.perform(post("/cursos").contentType(APPLICATION_JSON)
+				.content(json)).andReturn();
+		int id = extractId(post);
+
+		String update = "{\"nombre\":\"Bioquimica Clinica\",\"descripcion\":\"Clinica avanzada\","
+				+ "\"creditos\":5,\"cupo\":20}";
+		MvcResult putResult = mockMvc.perform(put("/cursos/" + id).contentType(APPLICATION_JSON)
+				.content(update).accept(APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.nombre").value("Bioquimica Clinica"))
+				.andExpect(jsonPath("$.creditos").value(5))
+				.andReturn();
+		Assertions.assertTrue(putResult.getResponse().getContentAsString().contains("Bioquimica Clinica"));
+	}
+
+	// Caso 15: Actualizar curso inexistente devuelve 404
+	@Test
+	public void testActualizarCursoInexistente() throws Exception {
+		String update = "{\"nombre\":\"No existe\",\"descripcion\":\"...\","
+				+ "\"creditos\":1,\"cupo\":5}";
+		MvcResult putResult = mockMvc.perform(put("/cursos/99999997").contentType(APPLICATION_JSON)
+				.content(update).accept(APPLICATION_JSON))
+				.andExpect(status().isNotFound())
+				.andReturn();
+		Assertions.assertEquals(404, putResult.getResponse().getStatus());
 	}
 }
