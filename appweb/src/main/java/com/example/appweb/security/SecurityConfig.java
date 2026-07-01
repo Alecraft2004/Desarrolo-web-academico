@@ -2,6 +2,7 @@ package com.example.appweb.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -26,6 +27,24 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/auth/**", "/", "/index.html", "/*.html",
 								"/css/**", "/js/**", "/error").permitAll()
+						// Lectura permitida para USER y ADMIN
+						.requestMatchers(HttpMethod.GET,
+								"/cursos/**", "/estudiantes/**",
+								"/profesores/**", "/inscripciones/**")
+								.hasAnyRole("USER", "ADMIN")
+						// Escritura solo para ADMIN
+						.requestMatchers(HttpMethod.POST,
+								"/cursos/**", "/estudiantes/**",
+								"/profesores/**", "/inscripciones/**")
+								.hasRole("ADMIN")
+						.requestMatchers(HttpMethod.PUT,
+								"/cursos/**", "/estudiantes/**",
+								"/profesores/**", "/inscripciones/**")
+								.hasRole("ADMIN")
+						.requestMatchers(HttpMethod.DELETE,
+								"/cursos/**", "/estudiantes/**",
+								"/profesores/**", "/inscripciones/**")
+								.hasRole("ADMIN")
 						.anyRequest().authenticated())
 				.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

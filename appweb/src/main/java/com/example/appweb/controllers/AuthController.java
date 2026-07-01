@@ -32,14 +32,25 @@ public class AuthController {
 			return ResponseEntity.status(HttpStatus.CONFLICT)
 					.body(Map.of("error", "El usuario ya existe"));
 		}
-		usuario.setPassword(encoder.encode(usuario.getPassword()));
-		if (usuario.getRol() == null || usuario.getRol().isBlank()) {
-			usuario.setRol("USER");
+
+		String rol = usuario.getRol() == null ? "" : usuario.getRol().trim().toUpperCase();
+		if (rol.isBlank()) {
+			rol = "USER";
+		} else if (!rol.equals("ADMIN") && !rol.equals("USER")) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+					.body(Map.of("error", "El rol debe ser ADMIN o USER"));
 		}
+		usuario.setRol(rol);
+		usuario.setPassword(encoder.encode(usuario.getPassword()));
 		repo.save(usuario);
+
+		String token = jwtService.generarToken(usuario.getUsername(), usuario.getRol());
 		return ResponseEntity.ok(Map.of(
 				"mensaje", "Usuario registrado correctamente",
-				"username", usuario.getUsername()));
+				"username", usuario.getUsername(),
+				"rol", usuario.getRol(),
+				"token", token,
+				"tipo", "Bearer"));
 	}
 
 	@PostMapping("/login")
