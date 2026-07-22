@@ -13,6 +13,7 @@ public class Curso {
 	private String descripcion;
 	private int creditos;
 	private int cupo;
+	private Integer profesorId;
 
 	public Curso() {}
 
@@ -34,4 +35,6 @@ public class Curso {
 	public void setCreditos(int creditos) { this.creditos = creditos; }
 	public int getCupo() { return cupo; }
 	public void setCupo(int cupo) { this.cupo = cupo; }
+	public Integer getProfesorId() { return profesorId; }
+	public void setProfesorId(Integer profesorId) { this.profesorId = profesorId; }
 }
