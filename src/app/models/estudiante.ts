@@ -3,5 +3,5 @@ export interface Estudiante {
   nombre: string;
   email: string;
   carrera: string;
-  semestre: number;
+  semestre: number | null;
 }

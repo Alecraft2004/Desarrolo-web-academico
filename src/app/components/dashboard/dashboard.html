@@ -4,8 +4,21 @@
     <p>Gestion de Estudiantes, Cursos, Profesores e Inscripciones</p>
   </div>
   <div class="user-box">
-    <div>Sesion: <span class="uname">{{ auth.getUsername() }}</span> ({{ auth.getRol() }})</div>
-    <button (click)="logout()">Cerrar sesion</button>
+    <app-theme-toggle />
+    <div class="user-profile">
+      <div class="user-avatar">
+        {{ auth.getUsername()?.charAt(0)?.toUpperCase() }}
+        <span class="online-dot"></span>
+      </div>
+      <div class="user-info">
+        <span class="uname">{{ auth.getUsername() }}</span>
+        <span class="urole">{{ auth.getRol() }}</span>
+      </div>
+    </div>
+    <button (click)="logout()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Salir
+    </button>
   </div>
 </header>
 

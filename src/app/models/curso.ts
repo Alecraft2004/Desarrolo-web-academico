@@ -2,6 +2,7 @@ export interface Curso {
   id?: number;
   nombre: string;
   descripcion: string;
-  creditos: number;
-  cupo: number;
+  creditos: number | null;
+  cupo: number | null;
+  profesorId?: number | null;
 }

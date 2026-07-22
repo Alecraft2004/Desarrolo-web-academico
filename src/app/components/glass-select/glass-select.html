@@ -1,0 +1,27 @@
+<div class="glass-select" [class.open]="abierto">
+  <button #trigger type="button" class="glass-select-trigger" (click)="toggle()" [attr.aria-expanded]="abierto">
+    <span [class.placeholder]="value === null">{{ etiquetaSeleccionada }}</span>
+    <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  </button>
+  @if (abierto) {
+    <ul #panel class="glass-select-panel" role="listbox"
+        [style.top.px]="panelTop" [style.left.px]="panelLeft" [style.width.px]="panelWidth">
+      @for (opt of options; track opt.value) {
+        <li role="option"
+            class="glass-select-option"
+            [class.disabled]="opt.disabled"
+            [class.selected]="opt.value === value"
+            (click)="elegir(opt)">
+          <span>{{ opt.label }}</span>
+          @if (opt.badge) {
+            <span class="glass-badge">{{ opt.badge }}</span>
+          }
+        </li>
+      } @empty {
+        <li class="glass-select-option disabled">Sin opciones</li>
+      }
+    </ul>
+  }
+</div>

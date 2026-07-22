@@ -1,7 +1,7 @@
 <h2>Profesores</h2>
 
-<div class="card">
-  <h3>{{ editandoId ? 'Editar' : 'Registrar' }} Profesor</h3>
+<div class="card" [class.editing]="editandoId !== null" [class.shake]="formShake">
+  <h3 class="card-title-form">{{ editandoId ? '✏️ Editar Profesor' : '➕ Registrar Profesor' }}</h3>
   @if (mensaje) {
     <div class="msg" [class.error]="esError" [class.ok]="!esError">{{ mensaje }}</div>
   }
@@ -13,7 +13,20 @@
       <input [(ngModel)]="form.especialidad" name="especialidad" placeholder="Especialidad" />
     </div>
     <div class="btn-group">
-      <button type="submit" class="btn btn-primary">{{ editandoId ? 'Actualizar' : 'Registrar' }}</button>
+      <button type="submit" class="btn btn-primary"
+        [class.btn-ok]="btnEstado === 'ok'"
+        [class.btn-err]="btnEstado === 'error'"
+        [disabled]="btnEstado === 'cargando'">
+        @if (btnEstado === 'cargando') {
+          <span class="btn-spinner"></span>{{ editandoId ? 'Guardando...' : 'Registrando...' }}
+        } @else if (btnEstado === 'ok') {
+          ✓ {{ editandoId ? 'Actualizado!' : 'Registrado!' }}
+        } @else if (btnEstado === 'error') {
+          ✗ Error — intenta de nuevo
+        } @else {
+          {{ editandoId ? 'Actualizar' : 'Registrar' }}
+        }
+      </button>
       @if (editandoId) {
         <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
       }
@@ -28,23 +41,43 @@
       <tr><th>ID</th><th>Nombre</th><th>Email</th><th>Departamento</th><th>Especialidad</th><th>Acciones</th></tr>
     </thead>
     <tbody>
-      @for (p of profesores; track p.id) {
-        <tr>
-          <td>{{ p.id }}</td>
-          <td>{{ p.nombre }}</td>
-          <td>{{ p.email }}</td>
-          <td>{{ p.departamento }}</td>
-          <td>{{ p.especialidad }}</td>
-          <td>
-            <div class="btn-group">
-              <button class="btn btn-success btn-sm" (click)="editar(p)">Editar</button>
-              <button class="btn btn-danger btn-sm" (click)="eliminar(p.id!)">Eliminar</button>
-            </div>
-          </td>
-        </tr>
-      } @empty {
-        <tr><td colspan="6" class="empty">Sin profesores registrados</td></tr>
+      @if (cargando) {
+        <tr><td colspan="6" class="cargando-cell"><span class="spinner"></span>Cargando...</td></tr>
+      } @else {
+        @for (p of profesores; track p.id) {
+          <tr [class.editing-row]="p.id === editandoId" [class.removing]="p.id === removiendoId">
+            <td>{{ p.id }}</td>
+            <td>{{ p.nombre }}</td>
+            <td>{{ p.email }}</td>
+            <td>{{ p.departamento }}</td>
+            <td>{{ p.especialidad }}</td>
+            <td>
+              <div class="btn-group">
+                <button class="btn btn-success btn-sm" (click)="editar(p)">Editar</button>
+                <button class="btn btn-danger btn-sm" (click)="pedirConfirmacion(p.id!)" [disabled]="p.id === removiendoId">
+                  @if (p.id === removiendoId) { <span class="btn-spinner"></span> } @else { Eliminar }
+                </button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty">Sin profesores registrados</td></tr>
+        }
       }
     </tbody>
   </table>
 </div>
+
+@if (confirmandoId !== null) {
+  <div class="confirm-overlay" (click)="cancelarConfirmacion()">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <span class="confirm-icon">🗑️</span>
+      <h3>¿Eliminar profesor?</h3>
+      <p>Esta acción no se puede deshacer.</p>
+      <div class="btn-group">
+        <button class="btn-confirm-cancel" (click)="cancelarConfirmacion()">Cancelar</button>
+        <button class="btn-confirm-delete" (click)="eliminar(confirmandoId!)">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+}

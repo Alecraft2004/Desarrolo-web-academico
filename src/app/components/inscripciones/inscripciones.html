@@ -1,19 +1,42 @@
 <h2>Inscripciones</h2>
 
-<div class="card">
-  <h3>{{ editandoId ? 'Editar' : 'Registrar' }} Inscripcion</h3>
+<div class="card" [class.editing]="editandoId !== null" [class.shake]="formShake">
+  <h3 class="card-title-form">{{ editandoId ? '✏️ Editar Inscripcion' : '➕ Registrar Inscripcion' }}</h3>
   @if (mensaje) {
     <div class="msg" [class.error]="esError" [class.ok]="!esError">{{ mensaje }}</div>
   }
+  @if (hayNegativo) {
+    <div class="msg error">No se permiten números negativos.</div>
+  }
   <form (ngSubmit)="guardar()" #f="ngForm">
     <div class="form-grid">
-      <input [(ngModel)]="form.estudianteId" name="estudianteId" type="number" placeholder="ID Estudiante" required />
-      <input [(ngModel)]="form.cursoId" name="cursoId" type="number" placeholder="ID Curso" required />
+      <app-glass-select
+        [options]="opcionesEstudiantes"
+        placeholder="Selecciona estudiante"
+        [value]="form.estudianteId"
+        (valueChange)="form.estudianteId = $event" />
+      <app-glass-select
+        [options]="opcionesCursos"
+        placeholder="Selecciona curso"
+        [value]="form.cursoId"
+        (valueChange)="form.cursoId = $event" />
       <input [(ngModel)]="form.fecha" name="fecha" type="date" />
-      <input [(ngModel)]="form.calificacion" name="calificacion" type="number" step="0.1" placeholder="Calificacion" />
     </div>
     <div class="btn-group">
-      <button type="submit" class="btn btn-primary">{{ editandoId ? 'Actualizar' : 'Registrar' }}</button>
+      <button type="submit" class="btn btn-primary"
+        [class.btn-ok]="btnEstado === 'ok'"
+        [class.btn-err]="btnEstado === 'error'"
+        [disabled]="btnEstado === 'cargando' || hayNegativo">
+        @if (btnEstado === 'cargando') {
+          <span class="btn-spinner"></span>{{ editandoId ? 'Guardando...' : 'Registrando...' }}
+        } @else if (btnEstado === 'ok') {
+          ✓ {{ editandoId ? 'Actualizado!' : 'Registrado!' }}
+        } @else if (btnEstado === 'error') {
+          ✗ Error — intenta de nuevo
+        } @else {
+          {{ editandoId ? 'Actualizar' : 'Registrar' }}
+        }
+      </button>
       @if (editandoId) {
         <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
       }
@@ -25,26 +48,100 @@
   <h3>Lista de Inscripciones</h3>
   <table>
     <thead>
-      <tr><th>ID</th><th>ID Estudiante</th><th>ID Curso</th><th>Fecha</th><th>Calificacion</th><th>Acciones</th></tr>
+      <tr><th>ID</th><th>Estudiante</th><th>Curso</th><th>Fecha</th><th>Acciones</th></tr>
     </thead>
     <tbody>
-      @for (i of inscripciones; track i.id) {
-        <tr>
-          <td>{{ i.id }}</td>
-          <td>{{ i.estudianteId }}</td>
-          <td>{{ i.cursoId }}</td>
-          <td>{{ i.fecha }}</td>
-          <td>{{ i.calificacion }}</td>
-          <td>
-            <div class="btn-group">
-              <button class="btn btn-success btn-sm" (click)="editar(i)">Editar</button>
-              <button class="btn btn-danger btn-sm" (click)="eliminar(i.id!)">Eliminar</button>
-            </div>
-          </td>
-        </tr>
-      } @empty {
-        <tr><td colspan="6" class="empty">Sin inscripciones registradas</td></tr>
+      @if (cargando) {
+        <tr><td colspan="5" class="cargando-cell"><span class="spinner"></span>Cargando...</td></tr>
+      } @else {
+        @for (i of inscripciones; track i.id) {
+          <tr [class.editing-row]="i.id === editandoId" [class.removing]="i.id === removiendoId">
+            <td>{{ i.id }}</td>
+            <td>{{ nombreEstudiante(i.estudianteId) }}</td>
+            <td>{{ nombreCurso(i.cursoId) }}</td>
+            <td>{{ i.fecha }}</td>
+            <td>
+              <div class="btn-group">
+                <button class="btn btn-secondary btn-sm" (click)="abrirCalificar(i)">Calificación</button>
+                @if ((i.calificacion ?? 0) > 0) {
+                  <button class="btn btn-secondary btn-sm" (click)="deshacerCalificacion(i)" [disabled]="i.id === deshaciendoId">
+                    @if (i.id === deshaciendoId) { <span class="btn-spinner"></span> } @else { Deshacer calificación }
+                  </button>
+                }
+                <button class="btn btn-success btn-sm" (click)="editar(i)">Editar</button>
+                <button class="btn btn-secondary btn-sm" (click)="pedirRetiro(i)" [disabled]="i.id === retirandoId">
+                  @if (i.id === retirandoId) { <span class="btn-spinner"></span> } @else { Retirar }
+                </button>
+                <button class="btn btn-danger btn-sm" (click)="pedirConfirmacion(i.id!)" [disabled]="i.id === removiendoId">
+                  @if (i.id === removiendoId) { <span class="btn-spinner"></span> } @else { Eliminar }
+                </button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5" class="empty">Sin inscripciones registradas</td></tr>
+        }
       }
     </tbody>
   </table>
 </div>
+
+@if (calificando) {
+  <div class="confirm-overlay" (click)="cerrarCalificar()">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <span class="confirm-icon">📝</span>
+      <h3>Registrar calificación</h3>
+      <p>{{ nombreEstudiante(calificando.estudianteId) }} — {{ nombreCurso(calificando.cursoId) }}</p>
+      @if (errorCalificar) {
+        <div class="msg error">{{ errorCalificar }}</div>
+      }
+      <input [(ngModel)]="nuevaCalificacion" name="nuevaCalificacion" type="number" min="0" max="20" step="0.1"
+             placeholder="Nota (0-20)" />
+      <div class="btn-group">
+        <button class="btn-confirm-cancel" (click)="cerrarCalificar()">Cancelar</button>
+        <button class="btn btn-primary" (click)="guardarCalificacion()" [disabled]="guardandoCalificacion">
+          @if (guardandoCalificacion) { <span class="btn-spinner"></span>Guardando... } @else { Guardar nota }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (retirando) {
+  <div class="confirm-overlay" (click)="cancelarRetiro()">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <span class="confirm-icon">🚪</span>
+      <h3>¿Retirar del curso?</h3>
+      <p>{{ nombreEstudiante(retirando.estudianteId) }} — {{ nombreCurso(retirando.cursoId) }}</p>
+      @if (errorRetirar) {
+        <div class="msg error">{{ errorRetirar }}</div>
+      }
+      <div class="btn-group">
+        <button class="btn-confirm-cancel" (click)="cancelarRetiro()">Cancelar</button>
+        @if (errorRetirar) {
+          <button class="btn btn-primary" (click)="deshacerYReintentarRetiro()" [disabled]="retirandoId !== null">
+            @if (retirandoId !== null) { <span class="btn-spinner"></span>Procesando... } @else { Deshacer calificación y retirar }
+          </button>
+        } @else {
+          <button class="btn-confirm-delete" (click)="confirmarRetiro()" [disabled]="retirandoId !== null">
+            @if (retirandoId !== null) { <span class="btn-spinner"></span>Retirando... } @else { Sí, retirar }
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+@if (confirmandoId !== null) {
+  <div class="confirm-overlay" (click)="cancelarConfirmacion()">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <span class="confirm-icon">🗑️</span>
+      <h3>¿Eliminar inscripción?</h3>
+      <p>Esta acción no se puede deshacer.</p>
+      <div class="btn-group">
+        <button class="btn-confirm-cancel" (click)="cancelarConfirmacion()">Cancelar</button>
+        <button class="btn-confirm-delete" (click)="eliminar(confirmandoId!)">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+}

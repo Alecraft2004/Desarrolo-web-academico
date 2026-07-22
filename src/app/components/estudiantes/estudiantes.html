@@ -1,19 +1,36 @@
 <h2>Estudiantes</h2>
 
-<div class="card">
-  <h3>{{ editandoId ? 'Editar' : 'Registrar' }} Estudiante</h3>
+<div class="card" [class.editing]="editandoId !== null" [class.shake]="formShake">
+  <h3 class="card-title-form">{{ editandoId ? '✏️ Editar Estudiante' : '➕ Registrar Estudiante' }}</h3>
   @if (mensaje) {
     <div class="msg" [class.error]="esError" [class.ok]="!esError">{{ mensaje }}</div>
+  }
+  @if (hayNegativo) {
+    <div class="msg error">No se permiten números negativos.</div>
   }
   <form (ngSubmit)="guardar()" #f="ngForm">
     <div class="form-grid">
       <input [(ngModel)]="form.nombre" name="nombre" placeholder="Nombre" required />
       <input [(ngModel)]="form.email" name="email" type="email" placeholder="Email" />
       <input [(ngModel)]="form.carrera" name="carrera" placeholder="Carrera" />
-      <input [(ngModel)]="form.semestre" name="semestre" type="number" placeholder="Semestre" />
+      <input [(ngModel)]="form.semestre" name="semestre" type="number" placeholder="Semestre" min="0"
+             [class.field-error]="form.semestre !== null && form.semestre < 0" />
     </div>
     <div class="btn-group">
-      <button type="submit" class="btn btn-primary">{{ editandoId ? 'Actualizar' : 'Registrar' }}</button>
+      <button type="submit" class="btn btn-primary"
+        [class.btn-ok]="btnEstado === 'ok'"
+        [class.btn-err]="btnEstado === 'error'"
+        [disabled]="btnEstado === 'cargando' || hayNegativo">
+        @if (btnEstado === 'cargando') {
+          <span class="btn-spinner"></span>{{ editandoId ? 'Guardando...' : 'Registrando...' }}
+        } @else if (btnEstado === 'ok') {
+          ✓ {{ editandoId ? 'Actualizado!' : 'Registrado!' }}
+        } @else if (btnEstado === 'error') {
+          ✗ Error — intenta de nuevo
+        } @else {
+          {{ editandoId ? 'Actualizar' : 'Registrar' }}
+        }
+      </button>
       @if (editandoId) {
         <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
       }
@@ -28,23 +45,106 @@
       <tr><th>ID</th><th>Nombre</th><th>Email</th><th>Carrera</th><th>Semestre</th><th>Acciones</th></tr>
     </thead>
     <tbody>
-      @for (e of estudiantes; track e.id) {
-        <tr>
-          <td>{{ e.id }}</td>
-          <td>{{ e.nombre }}</td>
-          <td>{{ e.email }}</td>
-          <td>{{ e.carrera }}</td>
-          <td>{{ e.semestre }}</td>
-          <td>
-            <div class="btn-group">
-              <button class="btn btn-success btn-sm" (click)="editar(e)">Editar</button>
-              <button class="btn btn-danger btn-sm" (click)="eliminar(e.id!)">Eliminar</button>
-            </div>
-          </td>
-        </tr>
-      } @empty {
-        <tr><td colspan="6" class="empty">Sin estudiantes registrados</td></tr>
+      @if (cargando) {
+        <tr><td colspan="6" class="cargando-cell"><span class="spinner"></span>Cargando...</td></tr>
+      } @else {
+        @for (e of estudiantes; track e.id) {
+          <tr [class.editing-row]="e.id === editandoId" [class.removing]="e.id === removiendoId">
+            <td>{{ e.id }}</td>
+            <td>{{ e.nombre }}</td>
+            <td>{{ e.email }}</td>
+            <td>{{ e.carrera }}</td>
+            <td>{{ e.semestre }}</td>
+            <td>
+              <div class="btn-group">
+                <button class="btn btn-secondary btn-sm" (click)="verHistorial(e.id!)">Historial</button>
+                <button class="btn btn-success btn-sm" (click)="editar(e)">Editar</button>
+                <button class="btn btn-danger btn-sm" (click)="pedirConfirmacion(e.id!)" [disabled]="e.id === removiendoId">
+                  @if (e.id === removiendoId) { <span class="btn-spinner"></span> } @else { Eliminar }
+                </button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty">Sin estudiantes registrados</td></tr>
+        }
       }
     </tbody>
   </table>
 </div>
+
+@if (cargandoHistorial || historial) {
+  <div class="confirm-overlay" (click)="cerrarHistorial()">
+    <div class="historial-modal" (click)="$event.stopPropagation()">
+      @if (cargandoHistorial) {
+        <div class="cargando-cell"><span class="spinner"></span>Cargando historial...</div>
+      } @else if (historial) {
+        <div class="historial-head">
+          <h3>📋 Historial de {{ historial.estudiante }}</h3>
+          <button class="btn btn-secondary btn-sm" (click)="cerrarHistorial()">Cerrar</button>
+        </div>
+
+        <div class="historial-stats">
+          <div class="stat">
+            <span class="stat-value">{{ historial.creditosAprobados }}</span>
+            <span class="stat-label">Créditos aprobados</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ historial.promedioPonderado }}</span>
+            <span class="stat-label">Promedio ponderado</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ historial.cursosAprobados }}</span>
+            <span class="stat-label">Aprobados</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ historial.cursosReprobados }}</span>
+            <span class="stat-label">Reprobados</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ historial.cursosEnCurso }}</span>
+            <span class="stat-label">En curso</span>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>Curso</th><th>Profesor</th><th>Créditos</th><th>Fecha</th><th>Nota</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            @for (c of historial.cursos; track c.curso + c.fecha) {
+              <tr>
+                <td>{{ c.curso }}</td>
+                <td>{{ c.profesor ?? '—' }}</td>
+                <td>{{ c.creditos }}</td>
+                <td>{{ c.fecha }}</td>
+                <td>{{ c.calificacion }}</td>
+                <td>
+                  <span [class]="'estado-badge ' + c.estado.toLowerCase()">
+                    {{ c.estado === 'EN_CURSO' ? 'En curso' : (c.estado === 'APROBADO' ? 'Aprobado' : 'Reprobado') }}
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="empty">Sin inscripciones registradas</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </div>
+}
+
+@if (confirmandoId !== null) {
+  <div class="confirm-overlay" (click)="cancelarConfirmacion()">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <span class="confirm-icon">🗑️</span>
+      <h3>¿Eliminar estudiante?</h3>
+      <p>Esta acción no se puede deshacer.</p>
+      <div class="btn-group">
+        <button class="btn-confirm-cancel" (click)="cancelarConfirmacion()">Cancelar</button>
+        <button class="btn-confirm-delete" (click)="eliminar(confirmandoId!)">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+}
